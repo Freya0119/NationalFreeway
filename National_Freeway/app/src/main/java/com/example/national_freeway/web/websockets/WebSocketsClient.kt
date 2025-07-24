@@ -13,7 +13,7 @@ class WebSocketsClient(private val wsListener: WsListener) {
     private var websockets: WebSocket? = null
 
     fun start() {
-        val url = "https://cf85997e8412.ngrok-free.app/websocket"
+        val url = "https://4bffbdaa6f26.ngrok-free.app/websocket"
         val request = Request.Builder().url(url).build()
         websockets = client.newWebSocket(request, listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -21,7 +21,7 @@ class WebSocketsClient(private val wsListener: WsListener) {
 
                 Log.d("WEB_SOCKETS", "onOpen\n$response")
 
-                wsListener.onMessage("onOpen $response")
+//                wsListener.onMessage("onOpen $response")
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -29,7 +29,7 @@ class WebSocketsClient(private val wsListener: WsListener) {
 
                 Log.d("WEB_SOCKETS", "onMessage\n$text")
 
-                wsListener.onMessage("onMessage $text")
+                wsListener.onMessage(text)
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {

@@ -69,3 +69,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("com.google.maps.android:maps-compose:2.11.4")
 }
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlinx" &&
+            requested.name.contains("serialization")) {
+            useVersion("1.6.3")
+        }
+    }
+}

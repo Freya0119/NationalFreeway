@@ -1,6 +1,5 @@
 package com.example.national_freeway.box
 
-import android.text.AutoText
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -8,14 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +26,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -42,11 +40,11 @@ import kotlin.math.min
 
 @Composable
 fun TextInCenter(modifier: Modifier, content: @Composable () -> Unit) {
-    BoxWithConstraints(modifier = modifier) {
-        val offsetX = maxWidth * 0.5f - 10.dp
+    BoxWithConstraints(modifier) {
+        val offsetX = maxWidth * 0.5f
         Box(Modifier
             .fillMaxWidth()
-            .offset(offsetX)) {
+            .offset(offsetX), Alignment.Center) {
             content()
         }
     }
@@ -71,7 +69,7 @@ fun SpeedBox(modifier: Modifier = Modifier, speedText: String="24") {
         AutoText(Modifier.fillMaxSize(0.8f)) { fontSize ->
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.Cyan, fontSize = fontSize)) {
+                    withStyle(style = SpanStyle(color = Color.Red, fontSize = fontSize * 0.9)) {
                         append(speedText)
                     }
                     withStyle(style = SpanStyle(color = Color.Black, fontSize = fontSize * 0.3)) {
@@ -153,6 +151,7 @@ fun Progress(modifier: Modifier = Modifier, speed: Float = 20f) {
                 val start = 0f
                 var count = 0
                 while (start + space * count < sizeWidth) {
+//                    刻度綫，暫時不用
 //                    val lineHeight = if (count % 5 == 0) longLineHeight else shortLineHeight
 //                    val color = if (count % 5 == 0) Color.Red else Color.Black
 //                    val x = start + space * count
@@ -173,46 +172,70 @@ fun Progress(modifier: Modifier = Modifier, speed: Float = 20f) {
                     count++
                 }
 //                畫兩條baseline
-                drawLine(Color.Black, Offset(sizeWidth / 3 * 1, 0f), Offset(sizeWidth / 3 * 1, sizeHeight))
-                drawLine(Color.Black, Offset(sizeWidth / 3 * 2, 0f), Offset(sizeWidth / 3 * 2, sizeHeight))
+                drawLine(Color.Black, Offset(sizeWidth / 3 * 1, 0f), Offset(sizeWidth / 3 * 1, sizeHeight), 1f)
+                drawLine(Color.Black, Offset(sizeWidth / 3 * 2, 0f), Offset(sizeWidth / 3 * 2, sizeHeight), 1f)
             },
         Alignment.Center
     ) {
-        val textCount = 5 // colorCount - 1
-        val colorCount = 3
+        val spaceCount = 3
+        val max = 120
+        val space = max / spaceCount
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            for (i in 1..textCount) {
-                Text("Idx ${i}", Modifier.weight(1f), textAlign = TextAlign.Center)
+            for (i in 1..spaceCount) {
+//                weight還是要佔3個
+                TextInCenter(Modifier.weight(1f)) {
+//                    最後一個不顯示
+                    if (i < spaceCount) {
+                        AutoText(Modifier.fillMaxSize()) { fontSize ->
+                            Box(Modifier.fillMaxHeight(), Alignment.Center) {
+                                Text("${space * i}", Modifier.fillMaxWidth(), fontSize = fontSize, textAlign = TextAlign.Center)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+fun transMouthCurve(speed: Float): Float {
+    val maxSpeed = 120f
+    val ratio = speed / maxSpeed
+    return ratio - 0.33f
+}
+
 @Composable
 fun SpeedCard(
     modifier: Modifier = Modifier,
-    speedText: String = "20",
+    speedText: String = "40",
     bgBrush: Brush = SolidColor(Color.White),
     borderBrush: Brush = SolidColor(Color.Black)
 ) {
+    val speed = speedText.toFloatOrNull() ?: 40f
     val rowModifier = Modifier.fillMaxWidth()
     val pd = 4.dp
-    Column(modifier.height(250.dp), Arrangement.spacedBy(pd)) {
+    Column(modifier, Arrangement.spacedBy(pd)) {
         RectangleBox(rowModifier.weight(1f), bgBrush, borderBrush) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("Speed $speedText")
+            AutoText(Modifier.fillMaxSize()) { fz ->
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    Text("當前平均車速 $speedText", Modifier
+                        .align(Alignment.Center)
+                        .offset(y = (-5).dp), fontSize = fz * 1.2)
+                }
             }
         }
         RoundCornerBox(rowModifier.weight(4f), bgBrush, borderBrush) {
             Column(verticalArrangement = Arrangement.spacedBy(pd)) {
                 Row(rowModifier.weight(3f), Arrangement.spacedBy(pd)) {
-                    val maxModifier = Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                    SpeedBox(maxModifier, speedText)
-                    SmileyFace(maxModifier, mouthCurve = 0.2f)
+                    SpeedBox(Modifier
+                        .fillMaxSize()
+                        .weight(1f), speedText)
+                    val mouthCurve = transMouthCurve(speed)
+                    SmileyFace(Modifier
+                        .fillMaxSize()
+                        .weight(1f), mouthCurve = mouthCurve)
                 }
-                Progress(rowModifier.weight(1f))
+                Progress(rowModifier.weight(1f), speed = speed)
             }
         }
     }
@@ -222,6 +245,8 @@ fun SpeedCard(
 @Composable
 fun SpeedCardPreview() {
     National_FreewayTheme {
-        Progress(Modifier.fillMaxWidth(1f))
+        SpeedCard(Modifier
+            .fillMaxWidth()
+            .height(250.dp))
     }
 }

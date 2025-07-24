@@ -16,17 +16,18 @@ interface WsListener {
 }
 
 class SocketsVM : ViewModel() {
-    private val _responseText = MutableStateFlow("Android")
-    val responseText: StateFlow<String> = _responseText
-
     private val _responseItem = MutableStateFlow<WebSocketResponse?>(null)
     val responseItem: StateFlow<WebSocketResponse?> = _responseItem
 
     private val ws = WebSocketsClient(object : WsListener {
         override fun onMessage(text: String) {
-            _responseText.value = text
-            val jsonStr = responseText.value
-            _responseItem.value = Json.decodeFromString<WebSocketResponse>(jsonStr)
+            Log.d("WEB_SOCKETS", "Before decode \n$text")
+            try {
+                val decoder = Json { ignoreUnknownKeys = true }
+                _responseItem.value = decoder.decodeFromString<WebSocketResponse>(text)
+            } catch (exception: Exception) {
+                Log.d("WEB_SOCKETS", "Decode fail \n$exception")
+            }
         }
     }).apply { start() }
 
